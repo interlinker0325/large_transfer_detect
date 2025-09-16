@@ -661,18 +661,10 @@ async function processTransferTransaction(transactionData, triggeringAddress) {
       ? `${transferAmount.toFixed(6)} SOL`
       : `${transferAmount.toFixed(6)} ${getTokenSymbol(tokenMint)}`;
 
-    // Send notification
-    const message = `🐋 Large Transfer Detected!\n\n` +
-      `💰 Amount: ${amountDisplay} ($${transferAmountUSD.toFixed(2)})\n` +
-      `🪙 Type: ${transferType}\n` +
-      `${tokenMint ? `🔗 Token: <code>${tokenMint}</code>\n` : ''}` +
-      `👤 From: <code>${triggeringAddress}</code>\n` +
-      `🎯 To: <code>${recipientDisplayAddress}</code>\n` +
-      `🔗 Signature: <code>${signature}</code>\n` +
-      `📊 Slot: ${slot}\n` +
-      `${isNewWhale ? '🆕 New whale address added!' : 'ℹ️ Address already tracked'}`;
+    // Send simple notification: only the recipient address
+    const message = `${recipientDisplayAddress}`;
 
-    await sendTelegramNotification(message, signature);
+    await sendTelegramNotification(message, null);
 
     console.log(`🚨 Large ${transferType} transfer detected: ${amountDisplay} ($${transferAmountUSD.toFixed(2)}) from ${triggeringAddress} to ${recipientDisplayAddress}`);
     logToFile(`Large ${transferType} transfer detected: ${amountDisplay} ($${transferAmountUSD.toFixed(2)}) from ${triggeringAddress} to ${recipientDisplayAddress}`);
