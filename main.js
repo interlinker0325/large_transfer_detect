@@ -113,7 +113,9 @@ const MIN_API_INTERVAL = 10000; // Minimum 10 seconds between API calls
 async function fetchSOLPrice() {
   const now = Date.now();
 
-  return solPriceCache.price;
+  // Return cached price if still valid
+  if (solPriceCache.price > 0 && (now - solPriceCache.timestamp) < PRICE_CACHE_DURATION) {
+    return solPriceCache.price;
   }
   
   // If we have a cached price but it's expired, still use it if we're being rate limited
