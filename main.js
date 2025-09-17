@@ -105,18 +105,28 @@ let solPriceCache = { price: 0, timestamp: 0 };
 let tokenPriceCache = new Map();
 const PRICE_CACHE_DURATION = 300000; // 5 minute cache
 
+// Track last API call to prevent rate limiting abuse
+let lastAPICall = 0;
+const MIN_API_INTERVAL = 10000; // Minimum 10 seconds between API calls
+
 // Function to fetch SOL price
 async function fetchSOLPrice() {
+  const now = Date.now();
 
-  // Return cached price if still valid
-  if (solPriceCache.price > 0 && (now - solPriceCache.timestamp) < PRICE_CACHE_DURATION) {
-    console.log(`Using cached SOL price: $${solPriceCache.price} (${Math.round((now - solPriceCache.timestamp) / 1000)}s old)`);
+  return solPriceCache.price;
+  }
+  
+  // If we have a cached price but it's expired, still use it if we're being rate limited
+  if (solPriceCache.price > 0 && (now - lastAPICall) < MIN_API_INTERVAL) {
+    console.log(`Rate limit protection: Using cached SOL price $${solPriceCache.price} (${Math.round((now - solPriceCache.timestamp) / 1000)}s old)`);
+    logToFile(`Rate limit protection: Using cached SOL price $${solPriceCache.price} (${Math.round((now - solPriceCache.timestamp) / 1000)}s old)`);
     return solPriceCache.price;
   }
 
   try {
     console.log('Fetching fresh SOL price from CoinGecko...');
     logToFile('Fetching fresh SOL price from CoinGecko...');
+    lastAPICall = now;
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
     const data = await response.json();
     const price = data.solana?.usd || 0;
