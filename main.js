@@ -103,7 +103,7 @@ function delay(ms) {
 
 let solPriceCache = { price: 0, timestamp: 0 };
 let tokenPriceCache = new Map();
-const PRICE_CACHE_DURATION = 300000; // 5 minute cache
+const PRICE_CACHE_DURATION = 60000; // 1 minute cache
 
 // Track last API call to prevent rate limiting abuse
 let lastAPICall = 0;
