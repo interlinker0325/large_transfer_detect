@@ -103,17 +103,20 @@ function delay(ms) {
 
 let solPriceCache = { price: 0, timestamp: 0 };
 let tokenPriceCache = new Map();
-const PRICE_CACHE_DURATION = 60000; // 1 minute cache
+const PRICE_CACHE_DURATION = 300000; // 5 minute cache
 
 // Function to fetch SOL price
 async function fetchSOLPrice() {
 
   // Return cached price if still valid
   if (solPriceCache.price > 0 && (now - solPriceCache.timestamp) < PRICE_CACHE_DURATION) {
+    console.log(`Using cached SOL price: $${solPriceCache.price} (${Math.round((now - solPriceCache.timestamp) / 1000)}s old)`);
     return solPriceCache.price;
   }
 
   try {
+    console.log('Fetching fresh SOL price from CoinGecko...');
+    logToFile('Fetching fresh SOL price from CoinGecko...');
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
     const data = await response.json();
     const price = data.solana?.usd || 0;
