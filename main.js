@@ -568,7 +568,12 @@ async function processTransferTransaction(transactionData, triggeringAddress) {
 
     // Classify the transfer transaction
     const classification = classifyTransferTransaction(transactionData.transaction);
+    console.log(`🔍 Transaction Classification Debug - isTransfer: ${classification.isTransfer}, type: ${classification.type}`);
+    logToFile(`Transaction Classification Debug - isTransfer: ${classification.isTransfer}, type: ${classification.type}`);
+    
     if (!classification.isTransfer) {
+      console.log(`⚠️ Transaction not classified as transfer, skipping: ${signature}`);
+      logToFile(`Transaction not classified as transfer, skipping: ${signature}`);
       return null;
     }
 
@@ -581,23 +586,37 @@ async function processTransferTransaction(transactionData, triggeringAddress) {
     if (classification.type === 'SOL' || classification.type === 'MIXED') {
       // Calculate largest SOL transfer from triggering address
       const { amountSOL, destination } = calculateLargestSOLTransfer(transactionData.transaction, triggeringAddress);
+      console.log(`🔍 SOL Transfer Debug - Amount: ${amountSOL} SOL, Destination: ${destination}`);
+      logToFile(`SOL Transfer Debug - Amount: ${amountSOL} SOL, Destination: ${destination}`);
+      
       if (amountSOL > 0) {
         const solPrice = await fetchSOLPrice();
         const solUSD = amountSOL * solPrice;
+        console.log(`🔍 SOL Price Debug - Price: $${solPrice}, USD Value: $${solUSD}`);
+        logToFile(`SOL Price Debug - Price: $${solPrice}, USD Value: $${solUSD}`);
         
         if (solUSD >= transferAmountUSD) {
           transferAmount = amountSOL;
           transferAmountUSD = solUSD;
           transferType = 'SOL';
         }
+      } else {
+        console.log(`⚠️ No SOL transfer found from triggering address: ${triggeringAddress}`);
+        logToFile(`No SOL transfer found from triggering address: ${triggeringAddress}`);
       }
     }
 
     if (classification.type === 'TOKEN' || classification.type === 'MIXED') {
       // Calculate token transfer amount
       const tokenTransfer = calculateTokenTransferAmount(transactionData.transaction);
+      console.log(`🔍 Token Transfer Debug - Amount: ${tokenTransfer.amount}, Mint: ${tokenTransfer.mint}, Decimals: ${tokenTransfer.decimals}`);
+      logToFile(`Token Transfer Debug - Amount: ${tokenTransfer.amount}, Mint: ${tokenTransfer.mint}, Decimals: ${tokenTransfer.decimals}`);
+      
       if (tokenTransfer.amount > 0 && tokenTransfer.mint) {
         const tokenPrice = await fetchTokenPrice(tokenTransfer.mint);
+        console.log(`🔍 Token Price Debug - Fetched price: $${tokenPrice} for mint: ${tokenTransfer.mint}`);
+        logToFile(`Token Price Debug - Fetched price: $${tokenPrice} for mint: ${tokenTransfer.mint}`);
+        
         // If we couldn't get a price, try to estimate based on known tokens
         let estimatedPrice = tokenPrice;
         if (tokenPrice === 0) {
@@ -606,10 +625,15 @@ async function processTransferTransaction(transactionData, triggeringAddress) {
           if (estimatedPrice > 0) {
             console.log(`Using estimated price for ${tokenTransfer.mint}: $${estimatedPrice}`);
             logToFile(`Using estimated price for ${tokenTransfer.mint}: $${estimatedPrice}`);
+          } else {
+            console.log(`⚠️ No price found for token ${tokenTransfer.mint}`);
+            logToFile(`No price found for token ${tokenTransfer.mint}`);
           }
         }
         
         const tokenUSD = tokenTransfer.amount * estimatedPrice;
+        console.log(`🔍 Token USD Debug - Amount: ${tokenTransfer.amount}, Price: $${estimatedPrice}, USD Value: $${tokenUSD}`);
+        logToFile(`Token USD Debug - Amount: ${tokenTransfer.amount}, Price: $${estimatedPrice}, USD Value: $${tokenUSD}`);
         
         if (tokenUSD >= transferAmountUSD) {
           transferAmount = tokenTransfer.amount;
@@ -617,6 +641,9 @@ async function processTransferTransaction(transactionData, triggeringAddress) {
           tokenMint = tokenTransfer.mint;
           transferType = 'TOKEN';
         }
+      } else {
+        console.log(`⚠️ No token transfer found or invalid data: amount=${tokenTransfer.amount}, mint=${tokenTransfer.mint}`);
+        logToFile(`No token transfer found or invalid data: amount=${tokenTransfer.amount}, mint=${tokenTransfer.mint}`);
       }
     }
 
