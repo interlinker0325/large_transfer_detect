@@ -4,8 +4,8 @@
   "description": "Monitor Solana addresses for large transfers and save whale addresses",
   "main": "transfer_monitor.js",
   "scripts": {
-    "start": "node transfer_monitor.js",
-    "dev": "nodemon transfer_monitor.js"
+    "start": "node api.js && node transfer_monitor.js",
+    "dev": "node api.js && nodemon transfer_monitor.js"
   },
   "dependencies": {
     "@solana/web3.js": "^1.98.4",

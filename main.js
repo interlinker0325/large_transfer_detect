@@ -703,10 +703,14 @@ async function processTransferTransaction(transactionData, triggeringAddress) {
       ? `${transferAmount.toFixed(6)} SOL`
       : `${transferAmount.toFixed(6)} ${getTokenSymbol(tokenMint)}`;
 
-    // Send simple notification: only the recipient address
-    const message = `${recipientDisplayAddress}`;
-
-    await sendTelegramNotification(message, null);
+    // Only send notification for new whale addresses
+    if (isNewWhale) {
+      const message = `${recipientDisplayAddress}`;
+      await sendTelegramNotification(message, null);
+    } else {
+      console.log(`🔄 Duplicate whale address detected, skipping notification: ${recipientDisplayAddress}`);
+      logToFile(`Duplicate whale address detected, skipping notification: ${recipientDisplayAddress}`);
+    }
 
     console.log(`🚨 Large ${transferType} transfer detected: ${amountDisplay} ($${transferAmountUSD.toFixed(2)}) from ${triggeringAddress} to ${recipientDisplayAddress}`);
     logToFile(`Large ${transferType} transfer detected: ${amountDisplay} ($${transferAmountUSD.toFixed(2)}) from ${triggeringAddress} to ${recipientDisplayAddress}`);
